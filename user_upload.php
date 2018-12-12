@@ -1,15 +1,13 @@
 <?php
-    $shortopts = ("u:p:h:");
+    $shortopts = ("u:p:h:d:");
     $longopts  = array(
         "file:",     // CSV file directory
         "create_table",        // Creates table
         "dry_run", //runs code without updating database
-        "help",          // No value
+        "help",          // Displays help
     );
     $options = getopt($shortopts, $longopts);
-    foreach($options as $key => $value) {
-        echo "$key is at $value";
-    }
+
 
     ReadArguments($options);
 
@@ -28,40 +26,60 @@
                 /*ends the script after the help info has been shown*/
             }
             elseif(isset($options['create_table'])) {
-                CreateTable();
+                CreateTable($options);
                 exit;
             }
         }
     }
 
     function LoginCheck($options){
-        if($options['u'] and $options['p'] and $options['h']){
+        if($options['u'] and $options['p'] and $options['h'] and $options['d']){
             // Create connection
             $mysqli = new mysqli($options['h'], $options['u'], $options['p']);
             // Check connection
             if ($mysqli->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
-                echo "Please check if the username, password, and host are correct";
+                echo "Please check if the username, password, and host are correct\n";
+                exit;
             } 
             else {
-                echo "Connected successfully";
+                echo "Connected successfully\n";
+                return $mysqli;
             }
         }
         else{
-            echo "Please enter username, password, and host correctly";
+            echo "Please enter username, password, and host correctly\n";
             exit;
         }
     }
 
-    /*function CreateTable(){
-        CREATE TABLE Users (
+    function CheckIfTableExists($conn){
+        $val = $conn->query('select 1 from `Users` LIMIT 1');
+        if($val !== FALSE){
+            echo "Table Users already exists\n";
+            exit;
+        }
+    }
+
+    function CreateTable($options){
+        $conn = LoginCheck($options);
+        mysqli_select_db($conn,$options['d']);
+        CheckIfTableExists($conn);
+        $sql = "CREATE TABLE Users (
             id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(30) NOT NULL,
             surname VARCHAR(30) NOT NULL,
             email VARCHAR(50) UNIQUE NOT NULL,
             reg_date TIMESTAMP
-        )
-    }*/
+        )";
+        if ($conn->query($sql) === TRUE) {
+            echo "Table Users created successfully";
+        } 
+        else {
+            echo "Error creating table.\nCheck if the database '". $options['d'] ."' exists and try again.\n ";
+        }
+        exit;
+    }
 
     function ParseCSV($location){
         $csvFile = file($location);
