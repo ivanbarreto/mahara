@@ -1,20 +1,83 @@
 <?php
-    ReadArguments($argv, $argc);
+    $shortopts = ("u:p:h:");
+    $longopts  = array(
+        "file:",     // CSV file directory
+        "create_table",        // Creates table
+        "dry_run", //runs code without updating database
+        "help",          // No value
+    );
+    $options = getopt($shortopts, $longopts);
+    foreach($options as $key => $value) {
+        echo "$key is at $value";
+    }
+
+    ReadArguments($options);
 
 
-    function ReadArguments($arguments, $NumberOfArguments){
-        /*checks if the --help command has been called*/
-        for ($i = 1; $i <= $NumberOfArguments -1; ++$i) {
-            if($arguments[$i] == "--help"){
+    function ReadArguments($options){
+        if (sizeof($options) == 0){
+            print "Wrong usage. Use --help for detailed info about using the program. \n" ;
+            exit;
+        }
+
+        /*checks if the --help or --create_table command has been called*/
+        foreach($options as $key => $value) {
+            if(isset($options['help'])){
                 help();
                 exit;
                 /*ends the script after the help info has been shown*/
             }
+            elseif(isset($options['create_table'])) {
+                CreateTable();
+                exit;
+            }
         }
     }
 
+    function LoginCheck($options){
+        if($options['u'] and $options['p'] and $options['h']){
+            // Create connection
+            $mysqli = new mysqli($options['h'], $options['u'], $options['p']);
+            // Check connection
+            if ($mysqli->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+                echo "Please check if the username, password, and host are correct";
+            } 
+            else {
+                echo "Connected successfully";
+            }
+        }
+        else{
+            echo "Please enter username, password, and host correctly";
+            exit;
+        }
+    }
 
-    /*prints detailed info about the possible script arguments*/
+    /*function CreateTable(){
+        CREATE TABLE Users (
+            id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(30) NOT NULL,
+            surname VARCHAR(30) NOT NULL,
+            email VARCHAR(50) UNIQUE NOT NULL,
+            reg_date TIMESTAMP
+        )
+    }*/
+
+    function ParseCSV($location){
+        $csvFile = file($location);
+        $data = [];
+        foreach ($csvFile as $line) {
+            $data[] = str_getcsv($line);
+
+        }
+        return $data;
+    }
+
+    function ValidateEmail(){
+
+    }
+
+    /*prints detailed info about the argument usage*/
     function help(){
         print "--file [csv file name] – this is the name of the CSV to be parsed; \n";
         print "--create_table – this will cause the MySQL users table to be built (and no further action will be taken)  \n";
@@ -26,21 +89,11 @@
     }
 
 
-    readCSV();
-
-
 
     $email = "oieoieoie";
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
       $emailErr = "Invalid email format"; 
     }
 
-function readCSV(){
-    $csvFile = file('users.csv');
-    $data = [];
-    foreach ($csvFile as $line) {
-        $data[] = str_getcsv($line);
-    }
 
-}
 ?>
