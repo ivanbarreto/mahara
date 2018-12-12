@@ -1,5 +1,7 @@
 # mahara
-Run    sudo apt-get install php-mysql   before running the program.
+Run    
+sudo apt-get install php-mysql   
+before running the program.   
 Repository created to showcase my solution to the Junior Developer role challenge.   
 Assumptions and new implementations:   
 1- I'm assuming the create table option deletes the old table (when it exists) and creates a new one;   
